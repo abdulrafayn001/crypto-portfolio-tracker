@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,7 +24,7 @@
             margin: 0 auto;
             background: white;
             border-radius: 15px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             overflow: hidden;
         }
 
@@ -190,7 +191,7 @@
             background: white;
             border-radius: 10px;
             overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
         .portfolio-table thead {
@@ -221,6 +222,26 @@
         .loss {
             color: #ef4444;
             font-weight: 600;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .edit-btn {
+            background: #3b82f6;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.2s;
+        }
+
+        .edit-btn:hover {
+            background: #2563eb;
         }
 
         .delete-btn {
@@ -286,6 +307,113 @@
             margin-bottom: 10px;
         }
 
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s;
+        }
+
+        .modal.show {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .modal-header h2 {
+            color: #667eea;
+            margin: 0;
+            font-size: 1.8em;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 2em;
+            color: #6b7280;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+
+        .close-btn:hover {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-buttons .btn {
+            margin-top: 0;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+            box-shadow: 0 5px 15px rgba(107, 114, 128, 0.4);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
         @media (max-width: 768px) {
             .form-grid {
                 grid-template-columns: 1fr;
@@ -303,9 +431,14 @@
             .portfolio-table td {
                 padding: 10px 5px;
             }
+
+            .action-buttons {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="header">
@@ -322,7 +455,8 @@
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="coinSymbol">Coin Symbol</label>
-                            <input type="text" id="coinSymbol" list="coinList" placeholder="Type to search..." required autocomplete="off">
+                            <input type="text" id="coinSymbol" list="coinList" placeholder="Type to search..." required
+                                autocomplete="off">
                             <datalist id="coinList">
                                 <option value="BTC">Bitcoin</option>
                                 <option value="ETH">Ethereum</option>
@@ -420,12 +554,77 @@
         </div>
     </div>
 
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Investment</h2>
+                <button class="close-btn" onclick="portfolio.closeEditModal()">&times;</button>
+            </div>
+            <form id="editInvestmentForm">
+                <input type="hidden" id="editInvestmentId">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="editCoinSymbol">Coin Symbol</label>
+                        <input type="text" id="editCoinSymbol" list="coinList" placeholder="Type to search..." required
+                            autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="editQuantity">Quantity</label>
+                        <input type="number" id="editQuantity" step="0.00000001" placeholder="0.5" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editBuyPrice">Buy Price (USDT)</label>
+                        <input type="number" id="editBuyPrice" step="0.01" placeholder="45000" required>
+                    </div>
+                </div>
+
+                <div class="threshold-section">
+                    <h3>Set Sell Threshold (Optional)</h3>
+                    <div class="threshold-options">
+                        <div class="radio-group">
+                            <input type="radio" id="editThresholdNone" name="editThresholdType" value="none" checked>
+                            <label for="editThresholdNone">No Threshold</label>
+                        </div>
+                        <div class="radio-group">
+                            <input type="radio" id="editThresholdPercentage" name="editThresholdType"
+                                value="percentage">
+                            <label for="editThresholdPercentage">Percentage (%)</label>
+                        </div>
+                        <div class="radio-group">
+                            <input type="radio" id="editThresholdPrice" name="editThresholdType" value="price">
+                            <label for="editThresholdPrice">Target Price (USDT)</label>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="editProfitThreshold">Profit Threshold</label>
+                            <input type="number" id="editProfitThreshold" step="0.01" placeholder="10">
+                        </div>
+                        <div class="form-group">
+                            <label for="editLossThreshold">Loss Threshold</label>
+                            <input type="number" id="editLossThreshold" step="0.01" placeholder="-5">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-buttons">
+                    <button type="submit" class="btn">Save Changes</button>
+                    <button type="button" class="btn btn-secondary"
+                        onclick="portfolio.closeEditModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         class CryptoPortfolio {
             constructor() {
                 this.investments = this.loadFromStorage();
                 this.currentPrices = {};
                 this.priceUpdateInterval = null;
+                this.editingInvestmentId = null;
                 this.init();
             }
 
@@ -443,7 +642,12 @@
                     this.addInvestment();
                 });
 
-                // Enable/disable threshold inputs based on selected type
+                document.getElementById('editInvestmentForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.updateInvestment();
+                });
+
+                // Enable/disable threshold inputs based on selected type (Add form)
                 document.querySelectorAll('input[name="thresholdType"]').forEach(radio => {
                     radio.addEventListener('change', () => {
                         const profitInput = document.getElementById('profitThreshold');
@@ -456,6 +660,28 @@
                             lossInput.value = '';
                         }
                     });
+                });
+
+                // Enable/disable threshold inputs based on selected type (Edit form)
+                document.querySelectorAll('input[name="editThresholdType"]').forEach(radio => {
+                    radio.addEventListener('change', () => {
+                        const profitInput = document.getElementById('editProfitThreshold');
+                        const lossInput = document.getElementById('editLossThreshold');
+                        const disabled = radio.value === 'none';
+                        profitInput.disabled = disabled;
+                        lossInput.disabled = disabled;
+                        if (disabled) {
+                            profitInput.value = '';
+                            lossInput.value = '';
+                        }
+                    });
+                });
+
+                // Close modal when clicking outside
+                document.getElementById('editModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'editModal') {
+                        this.closeEditModal();
+                    }
                 });
             }
 
@@ -491,20 +717,89 @@
                 document.getElementById('addInvestmentForm').reset();
             }
 
+            openEditModal(id) {
+                const investment = this.investments.find(inv => inv.id === id);
+                if (!investment) return;
+
+                this.editingInvestmentId = id;
+
+                // Populate form fields
+                document.getElementById('editInvestmentId').value = investment.id;
+                document.getElementById('editCoinSymbol').value = investment.symbol;
+                document.getElementById('editQuantity').value = investment.quantity;
+                document.getElementById('editBuyPrice').value = investment.buyPrice;
+
+                // Set threshold type
+                document.querySelector(`input[name="editThresholdType"][value="${investment.thresholdType}"]`).checked = true;
+
+                // Set threshold values
+                document.getElementById('editProfitThreshold').value = investment.profitThreshold || '';
+                document.getElementById('editLossThreshold').value = investment.lossThreshold || '';
+
+                // Enable/disable threshold inputs
+                const disabled = investment.thresholdType === 'none';
+                document.getElementById('editProfitThreshold').disabled = disabled;
+                document.getElementById('editLossThreshold').disabled = disabled;
+
+                // Show modal
+                document.getElementById('editModal').classList.add('show');
+            }
+
+            closeEditModal() {
+                document.getElementById('editModal').classList.remove('show');
+                this.editingInvestmentId = null;
+                document.getElementById('editInvestmentForm').reset();
+            }
+
+            updateInvestment() {
+                const id = parseInt(document.getElementById('editInvestmentId').value);
+                const symbol = document.getElementById('editCoinSymbol').value.trim().toUpperCase();
+                const quantity = parseFloat(document.getElementById('editQuantity').value);
+                const buyPrice = parseFloat(document.getElementById('editBuyPrice').value);
+                const thresholdType = document.querySelector('input[name="editThresholdType"]:checked').value;
+                const profitThreshold = parseFloat(document.getElementById('editProfitThreshold').value) || null;
+                const lossThreshold = parseFloat(document.getElementById('editLossThreshold').value) || null;
+
+                if (!symbol || isNaN(quantity) || isNaN(buyPrice) || quantity <= 0 || buyPrice <= 0) {
+                    this.showAlert('Please fill in all required fields with valid values', 'warning');
+                    return;
+                }
+
+                const investmentIndex = this.investments.findIndex(inv => inv.id === id);
+                if (investmentIndex === -1) return;
+
+                // Update the investment
+                this.investments[investmentIndex] = {
+                    ...this.investments[investmentIndex],
+                    symbol: symbol,
+                    quantity: quantity,
+                    buyPrice: buyPrice,
+                    thresholdType: thresholdType,
+                    profitThreshold: profitThreshold,
+                    lossThreshold: lossThreshold
+                };
+
+                this.saveToStorage();
+                this.updatePrices();
+                this.renderPortfolio();
+                this.closeEditModal();
+                this.showAlert(`Successfully updated ${symbol} investment`, 'success');
+            }
+
             async updatePrices() {
                 const symbols = [...new Set(this.investments.map(inv => inv.symbol))];
                 if (symbols.length === 0) return;
 
                 try {
                     // Fetch prices for all unique symbols
-                    const promises = symbols.map(symbol => 
+                    const promises = symbols.map(symbol =>
                         fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}USDT`)
                             .then(res => res.json())
                             .catch(() => null)
                     );
 
                     const results = await Promise.all(promises);
-                    
+
                     results.forEach((data, index) => {
                         if (data && data.price) {
                             this.currentPrices[symbols[index]] = parseFloat(data.price);
@@ -571,34 +866,34 @@
                                 <th>P&L</th>
                                 <th>P&L %</th>
                                 <th>Threshold</th>
-                                <th>Action</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             ${this.investments.map(inv => {
-                                const currentPrice = this.currentPrices[inv.symbol] || 0;
-                                const invested = inv.quantity * inv.buyPrice;
-                                const currentValue = inv.quantity * currentPrice;
-                                const pl = currentValue - invested;
-                                const plPercentage = invested > 0 ? (pl / invested) * 100 : 0;
+                    const currentPrice = this.currentPrices[inv.symbol] || 0;
+                    const invested = inv.quantity * inv.buyPrice;
+                    const currentValue = inv.quantity * currentPrice;
+                    const pl = currentValue - invested;
+                    const plPercentage = invested > 0 ? (pl / invested) * 100 : 0;
 
-                                totalInvested += invested;
-                                totalCurrentValue += currentValue;
+                    totalInvested += invested;
+                    totalCurrentValue += currentValue;
 
-                                let thresholdInfo = 'None';
-                                if (inv.thresholdType === 'percentage') {
-                                    const parts = [];
-                                    if (inv.profitThreshold) parts.push(`+${inv.profitThreshold}%`);
-                                    if (inv.lossThreshold) parts.push(`${inv.lossThreshold}%`);
-                                    thresholdInfo = `<span class="threshold-badge threshold-percentage">${parts.join(' / ')}</span>`;
-                                } else if (inv.thresholdType === 'price') {
-                                    const parts = [];
-                                    if (inv.profitThreshold) parts.push(`$${inv.profitThreshold}`);
-                                    if (inv.lossThreshold) parts.push(`$${inv.lossThreshold}`);
-                                    thresholdInfo = `<span class="threshold-badge threshold-price">${parts.join(' / ')}</span>`;
-                                }
+                    let thresholdInfo = 'None';
+                    if (inv.thresholdType === 'percentage') {
+                        const parts = [];
+                        if (inv.profitThreshold) parts.push(`+${inv.profitThreshold}%`);
+                        if (inv.lossThreshold) parts.push(`${inv.lossThreshold}%`);
+                        thresholdInfo = `<span class="threshold-badge threshold-percentage">${parts.join(' / ')}</span>`;
+                    } else if (inv.thresholdType === 'price') {
+                        const parts = [];
+                        if (inv.profitThreshold) parts.push(`$${inv.profitThreshold}`);
+                        if (inv.lossThreshold) parts.push(`$${inv.lossThreshold}`);
+                        thresholdInfo = `<span class="threshold-badge threshold-price">${parts.join(' / ')}</span>`;
+                    }
 
-                                return `
+                    return `
                                     <tr>
                                         <td><strong>${inv.symbol}</strong></td>
                                         <td>${inv.quantity}</td>
@@ -609,10 +904,15 @@
                                         <td class="${pl >= 0 ? 'profit' : 'loss'}">$${pl.toFixed(2)}</td>
                                         <td class="${plPercentage >= 0 ? 'profit' : 'loss'}">${plPercentage.toFixed(2)}%</td>
                                         <td>${thresholdInfo}</td>
-                                        <td><button class="delete-btn" onclick="portfolio.deleteInvestment(${inv.id})">Delete</button></td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <button class="edit-btn" onclick="portfolio.openEditModal(${inv.id})">Edit</button>
+                                                <button class="delete-btn" onclick="portfolio.deleteInvestment(${inv.id})">Delete</button>
+                                            </div>
+                                        </td>
                                     </tr>
                                 `;
-                            }).join('')}
+                }).join('')}
                         </tbody>
                     </table>
                 `;
@@ -668,4 +968,5 @@
         const portfolio = new CryptoPortfolio();
     </script>
 </body>
+
 </html>
