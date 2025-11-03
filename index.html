@@ -538,31 +538,13 @@
                 flex-direction: column;
             }
 
+            /* Hide table and show cards on mobile */
             .portfolio-table {
-                font-size: 0.8em;
+                display: none;
+            }
+
+            .portfolio-cards {
                 display: block;
-                overflow-x: auto;
-            }
-
-            .portfolio-table th,
-            .portfolio-table td {
-                padding: 8px 4px;
-            }
-
-            .portfolio-table .date-cell {
-                font-size: 0.75em;
-            }
-
-            .action-buttons {
-                flex-direction: row;
-                gap: 4px;
-            }
-
-            .edit-btn,
-            .delete-btn {
-                width: 32px;
-                height: 32px;
-                font-size: 1em;
             }
 
             .delete-modal-buttons {
@@ -575,13 +557,102 @@
         }
 
         @media (max-width: 480px) {
-            .portfolio-table {
-                font-size: 0.75em;
-            }
-
             .stat-card p {
                 font-size: 1.5em;
             }
+        }
+
+        /* Portfolio Cards for Mobile */
+        .portfolio-cards {
+            display: none;
+        }
+
+        .portfolio-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #667eea;
+        }
+
+        .portfolio-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .portfolio-card-coin {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #374151;
+        }
+
+        .portfolio-card-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .portfolio-card-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .portfolio-card-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .portfolio-card-item.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .portfolio-card-label {
+            font-size: 0.75em;
+            color: #6b7280;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .portfolio-card-value {
+            font-size: 1em;
+            color: #374151;
+            font-weight: 600;
+        }
+
+        .portfolio-card-date {
+            font-size: 0.85em;
+            color: #9ca3af;
+        }
+
+        .portfolio-card-pl {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .portfolio-card-pl-item {
+            text-align: center;
+        }
+
+        .portfolio-card-pl-label {
+            font-size: 0.75em;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+
+        .portfolio-card-pl-value {
+            font-size: 1.2em;
+            font-weight: 700;
         }
     </style>
 </head>
@@ -1066,6 +1137,7 @@
                 let totalInvested = 0;
                 let totalCurrentValue = 0;
 
+                // Generate table HTML
                 const tableHTML = `
                     <table class="portfolio-table">
                         <thead>
@@ -1141,7 +1213,102 @@
                     </table>
                 `;
 
-                document.getElementById('portfolioTableContainer').innerHTML = tableHTML;
+                // Reset totals for cards
+                totalInvested = 0;
+                totalCurrentValue = 0;
+
+                // Generate cards HTML
+                const cardsHTML = `
+                    <div class="portfolio-cards">
+                        ${this.investments.map(inv => {
+                    const currentPrice = this.currentPrices[inv.symbol] || 0;
+                    const invested = inv.quantity * inv.buyPrice;
+                    const currentValue = inv.quantity * currentPrice;
+                    const pl = currentValue - invested;
+                    const plPercentage = invested > 0 ? (pl / invested) * 100 : 0;
+
+                    totalInvested += invested;
+                    totalCurrentValue += currentValue;
+
+                    // Format buy date
+                    const buyDate = new Date(inv.buyDate);
+                    const formattedDate = buyDate.toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
+                    let thresholdInfo = '<span style="color: #9ca3af;">None</span>';
+                    if (inv.thresholdType === 'percentage') {
+                        const parts = [];
+                        if (inv.profitThreshold) parts.push(`+${inv.profitThreshold}%`);
+                        if (inv.lossThreshold) parts.push(`${inv.lossThreshold}%`);
+                        thresholdInfo = `<span class="threshold-badge threshold-percentage">${parts.join(' / ')}</span>`;
+                    } else if (inv.thresholdType === 'price') {
+                        const parts = [];
+                        if (inv.profitThreshold) parts.push(`$${inv.profitThreshold}`);
+                        if (inv.lossThreshold) parts.push(`$${inv.lossThreshold}`);
+                        thresholdInfo = `<span class="threshold-badge threshold-price">${parts.join(' / ')}</span>`;
+                    }
+
+                    return `
+                        <div class="portfolio-card">
+                            <div class="portfolio-card-header">
+                                <div class="portfolio-card-coin">${inv.symbol}</div>
+                                <div class="portfolio-card-actions">
+                                    <button class="edit-btn" onclick="portfolio.openEditModal(${inv.id})" title="Edit">✏️</button>
+                                    <button class="delete-btn" onclick="portfolio.deleteInvestment(${inv.id})" title="Delete">🗑️</button>
+                                </div>
+                            </div>
+                            <div class="portfolio-card-body">
+                                <div class="portfolio-card-item">
+                                    <div class="portfolio-card-label">Quantity</div>
+                                    <div class="portfolio-card-value">${inv.quantity}</div>
+                                </div>
+                                <div class="portfolio-card-item">
+                                    <div class="portfolio-card-label">Buy Price</div>
+                                    <div class="portfolio-card-value">$${inv.buyPrice.toFixed(2)}</div>
+                                </div>
+                                <div class="portfolio-card-item">
+                                    <div class="portfolio-card-label">Current Price</div>
+                                    <div class="portfolio-card-value">$${currentPrice.toFixed(2)}</div>
+                                </div>
+                                <div class="portfolio-card-item">
+                                    <div class="portfolio-card-label">Invested</div>
+                                    <div class="portfolio-card-value">$${invested.toFixed(2)}</div>
+                                </div>
+                                <div class="portfolio-card-item">
+                                    <div class="portfolio-card-label">Current Value</div>
+                                    <div class="portfolio-card-value">$${currentValue.toFixed(2)}</div>
+                                </div>
+                                <div class="portfolio-card-item">
+                                    <div class="portfolio-card-label">Threshold</div>
+                                    <div class="portfolio-card-value">${thresholdInfo}</div>
+                                </div>
+                                <div class="portfolio-card-item full-width">
+                                    <div class="portfolio-card-label">Purchase Date</div>
+                                    <div class="portfolio-card-date">${formattedDate}</div>
+                                </div>
+                            </div>
+                            <div class="portfolio-card-pl">
+                                <div class="portfolio-card-pl-item">
+                                    <div class="portfolio-card-pl-label">Profit/Loss</div>
+                                    <div class="portfolio-card-pl-value ${pl >= 0 ? 'profit' : 'loss'}">${pl >= 0 ? '+' : ''}$${pl.toFixed(2)}</div>
+                                </div>
+                                <div class="portfolio-card-pl-item">
+                                    <div class="portfolio-card-pl-label">P&L %</div>
+                                    <div class="portfolio-card-pl-value ${plPercentage >= 0 ? 'profit' : 'loss'}">${plPercentage >= 0 ? '+' : ''}${plPercentage.toFixed(2)}%</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+                    </div>
+                `;
+
+                document.getElementById('portfolioTableContainer').innerHTML = tableHTML + cardsHTML;
 
                 const totalPL = totalCurrentValue - totalInvested;
                 const totalPLPercentage = totalInvested > 0 ? (totalPL / totalInvested) * 100 : 0;
