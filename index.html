@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Portfolio Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .form-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .form-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+            font-size: 0.9em;
+        }
+        
+        .form-group input,
+        .form-group select {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .threshold-section {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .threshold-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        .threshold-options {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .radio-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .radio-group input[type="radio"] {
+            width: auto;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+            margin-top: 15px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .portfolio-section {
+            margin-top: 30px;
+        }
+        
+        .portfolio-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-card h3 {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .stat-card p {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+        
+        .portfolio-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .portfolio-table thead {
+            background: #667eea;
+            color: white;
+        }
+        
+        .portfolio-table th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .portfolio-table td {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .portfolio-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .profit {
+            color: #10b981;
+            font-weight: 600;
+        }
+        
+        .loss {
+            color: #ef4444;
+            font-weight: 600;
+        }
+        
+        .delete-btn {
+            background: #ef4444;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.2s;
+        }
+        
+        .delete-btn:hover {
+            background: #dc2626;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 2px solid #10b981;
+        }
+        
+        .alert-warning {
+            background: #fef3c7;
+            color: #92400e;
+            border: 2px solid #f59e0b;
+        }
+        
+        .threshold-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        
+        .threshold-percentage {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .threshold-price {
+            background: #fce7f3;
+            color: #9f1239;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+        
+        .empty-state h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .threshold-options {
+                flex-direction: column;
+            }
+            .portfolio-table {
+                font-size: 0.9em;
+            }
+            .portfolio-table th,
+            .portfolio-table td {
+                padding: 10px 5px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💰 Crypto Portfolio Tracker</h1>
+            <p>Track your cryptocurrency investments with live Binance prices</p>
+        </div>
+
+        <div class="content">
+            <div id="alertContainer"></div>
+
+            <div class="form-section">
+                <h2>Add New Investment</h2>
+                <form id="addInvestmentForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="coinSymbol">Coin Symbol</label>
+                            <select id="coinSymbol" required>
+                                <option value="">Select a coin</option>
+                                <option value="BTC">BTC - Bitcoin</option>
+                                <option value="ETH">ETH - Ethereum</option>
+                                <option value="BNB">BNB - Binance Coin</option>
+                                <option value="XRP">XRP - Ripple</option>
+                                <option value="ADA">ADA - Cardano</option>
+                                <option value="DOGE">DOGE - Dogecoin</option>
+                                <option value="SOL">SOL - Solana</option>
+                                <option value="TRX">TRX - Tron</option>
+                                <option value="DOT">DOT - Polkadot</option>
+                                <option value="MATIC">MATIC - Polygon</option>
+                                <option value="LTC">LTC - Litecoin</option>
+                                <option value="SHIB">SHIB - Shiba Inu</option>
+                                <option value="AVAX">AVAX - Avalanche</option>
+                                <option value="UNI">UNI - Uniswap</option>
+                                <option value="LINK">LINK - Chainlink</option>
+                                <option value="ATOM">ATOM - Cosmos</option>
+                                <option value="XLM">XLM - Stellar</option>
+                                <option value="NEAR">NEAR - Near Protocol</option>
+                                <option value="ALGO">ALGO - Algorand</option>
+                                <option value="VET">VET - VeChain</option>
+                                <option value="FIL">FIL - Filecoin</option>
+                                <option value="HBAR">HBAR - Hedera</option>
+                                <option value="APT">APT - Aptos</option>
+                                <option value="ARB">ARB - Arbitrum</option>
+                                <option value="OP">OP - Optimism</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="quantity">Quantity</label>
+                            <input type="number" id="quantity" step="0.00000001" placeholder="0.5" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="buyPrice">Buy Price (USDT)</label>
+                            <input type="number" id="buyPrice" step="0.01" placeholder="45000" required>
+                        </div>
+                    </div>
+
+                    <div class="threshold-section">
+                        <h3>Set Sell Threshold (Optional)</h3>
+                        <div class="threshold-options">
+                            <div class="radio-group">
+                                <input type="radio" id="thresholdNone" name="thresholdType" value="none" checked>
+                                <label for="thresholdNone">No Threshold</label>
+                            </div>
+                            <div class="radio-group">
+                                <input type="radio" id="thresholdPercentage" name="thresholdType" value="percentage">
+                                <label for="thresholdPercentage">Percentage (%)</label>
+                            </div>
+                            <div class="radio-group">
+                                <input type="radio" id="thresholdPrice" name="thresholdType" value="price">
+                                <label for="thresholdPrice">Target Price (USDT)</label>
+                            </div>
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="profitThreshold">Profit Threshold</label>
+                                <input type="number" id="profitThreshold" step="0.01" placeholder="10">
+                            </div>
+                            <div class="form-group">
+                                <label for="lossThreshold">Loss Threshold</label>
+                                <input type="number" id="lossThreshold" step="0.01" placeholder="-5">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn">Add Investment</button>
+                </form>
+            </div>
+
+            <div class="portfolio-section">
+                <h2>Your Portfolio</h2>
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card">
+                        <h3>Total Invested</h3>
+                        <p id="totalInvested">$0.00</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Current Value</h3>
+                        <p id="currentValue">$0.00</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total P&L</h3>
+                        <p id="totalPL">$0.00</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>P&L Percentage</h3>
+                        <p id="plPercentage">0%</p>
+                    </div>
+                </div>
+
+                <div id="portfolioTableContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class CryptoPortfolio {
+            constructor() {
+                this.investments = this.loadFromStorage();
+                this.currentPrices = {};
+                this.priceUpdateInterval = null;
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.updatePrices();
+                this.renderPortfolio();
+                // Update prices every 10 seconds
+                this.priceUpdateInterval = setInterval(() => this.updatePrices(), 10000);
+            }
+
+            setupEventListeners() {
+                document.getElementById('addInvestmentForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.addInvestment();
+                });
+
+                // Enable/disable threshold inputs based on selected type
+                document.querySelectorAll('input[name="thresholdType"]').forEach(radio => {
+                    radio.addEventListener('change', () => {
+                        const profitInput = document.getElementById('profitThreshold');
+                        const lossInput = document.getElementById('lossThreshold');
+                        const disabled = radio.value === 'none';
+                        profitInput.disabled = disabled;
+                        lossInput.disabled = disabled;
+                        if (disabled) {
+                            profitInput.value = '';
+                            lossInput.value = '';
+                        }
+                    });
+                });
+            }
+
+            addInvestment() {
+                const symbol = document.getElementById('coinSymbol').value;
+                const quantity = parseFloat(document.getElementById('quantity').value);
+                const buyPrice = parseFloat(document.getElementById('buyPrice').value);
+                const thresholdType = document.querySelector('input[name="thresholdType"]:checked').value;
+                const profitThreshold = parseFloat(document.getElementById('profitThreshold').value) || null;
+                const lossThreshold = parseFloat(document.getElementById('lossThreshold').value) || null;
+
+                if (!symbol || isNaN(quantity) || isNaN(buyPrice) || quantity <= 0 || buyPrice <= 0) {
+                    this.showAlert('Please fill in all required fields with valid values', 'warning');
+                    return;
+                }
+
+                const investment = {
+                    id: Date.now(),
+                    symbol: symbol,
+                    quantity: quantity,
+                    buyPrice: buyPrice,
+                    buyDate: new Date().toISOString(),
+                    thresholdType: thresholdType,
+                    profitThreshold: profitThreshold,
+                    lossThreshold: lossThreshold
+                };
+
+                this.investments.push(investment);
+                this.saveToStorage();
+                this.updatePrices();
+                this.renderPortfolio();
+                this.showAlert(`Successfully added ${quantity} ${symbol}`, 'success');
+                document.getElementById('addInvestmentForm').reset();
+            }
+
+            async updatePrices() {
+                const symbols = [...new Set(this.investments.map(inv => inv.symbol))];
+                if (symbols.length === 0) return;
+
+                try {
+                    // Fetch prices for all unique symbols
+                    const promises = symbols.map(symbol =>
+                        fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}USDT`)
+                        .then(res => res.json())
+                        .catch(() => null)
+                    );
+
+                    const results = await Promise.all(promises);
+
+                    results.forEach((data, index) => {
+                        if (data && data.price) {
+                            this.currentPrices[symbols[index]] = parseFloat(data.price);
+                        }
+                    });
+
+                    this.checkThresholds();
+                    this.renderPortfolio();
+                } catch (error) {
+                    console.error('Error fetching prices:', error);
+                }
+            }
+
+            checkThresholds() {
+                this.investments.forEach(inv => {
+                    const currentPrice = this.currentPrices[inv.symbol];
+                    if (!currentPrice) return;
+
+                    const plPercentage = ((currentPrice - inv.buyPrice) / inv.buyPrice) * 100;
+
+                    if (inv.thresholdType === 'percentage') {
+                        if (inv.profitThreshold && plPercentage >= inv.profitThreshold) {
+                            this.showAlert(`🎯 ${inv.symbol} reached profit target of ${inv.profitThreshold}%! Current: ${plPercentage.toFixed(2)}%`, 'success');
+                        }
+                        if (inv.lossThreshold && plPercentage <= inv.lossThreshold) {
+                            this.showAlert(`⚠️ ${inv.symbol} reached loss threshold of ${inv.lossThreshold}%! Current: ${plPercentage.toFixed(2)}%`, 'warning');
+                        }
+                    } else if (inv.thresholdType === 'price') {
+                        if (inv.profitThreshold && currentPrice >= inv.profitThreshold) {
+                            this.showAlert(`🎯 ${inv.symbol} reached target price of $${inv.profitThreshold}! Current: $${currentPrice.toFixed(2)}`, 'success');
+                        }
+                        if (inv.lossThreshold && currentPrice <= inv.lossThreshold) {
+                            this.showAlert(`⚠️ ${inv.symbol} reached stop loss of $${inv.lossThreshold}! Current: $${currentPrice.toFixed(2)}`, 'warning');
+                        }
+                    }
+                });
+            }
+
+            renderPortfolio() {
+                    if (this.investments.length === 0) {
+                        document.getElementById('portfolioTableContainer').innerHTML = `
+                        <div class="empty-state">
+                            <h3>No investments yet</h3>
+                            <p>Add your first cryptocurrency investment above to get started!</p>
+                        </div>
+                    `;
+                        this.updateStats(0, 0, 0, 0);
+                        return;
+                    }
+
+                    let totalInvested = 0;
+                    let totalCurrentValue = 0;
+
+                    const tableHTML = `
+                    <table class="portfolio-table">
+                        <thead>
+                            <tr>
+                                <th>Coin</th>
+                                <th>Quantity</th>
+                                <th>Buy Price</th>
+                                <th>Current Price</th>
+                                <th>Invested</th>
+                                <th>Current Value</th>
+                                <th>P&L</th>
+                                <th>P&L %</th>
+                                <th>Threshold</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${this.investments.map(inv => {
+                                const currentPrice = this.currentPrices[inv.symbol] || 0;
+                                const invested = inv.quantity * inv.buyPrice;
+                                const currentValue = inv.quantity * currentPrice;
+                                const pl = currentValue - invested;
+                                const plPercentage = invested > 0 ? (pl / invested) * 100 : 0;
+
+                                totalInvested += invested;
+                                totalCurrentValue += currentValue;
+
+                                let thresholdInfo = 'None';
+                                if (inv.thresholdType === 'percentage') {
+                                    const parts = [];
+                                    if (inv.profitThreshold) parts.push(`+${inv.profitThreshold}%`);
+                                    if (inv.lossThreshold) parts.push(`${inv.lossThreshold}%`);
+                                    thresholdInfo = `<span class="threshold-badge threshold-percentage">${parts.join(' / ')}</span>`;
+                                } else if (inv.thresholdType === 'price') {
+                                    const parts = [];
+                                    if (inv.profitThreshold) parts.push(`$${inv.profitThreshold}`);
+                                    if (inv.lossThreshold) parts.push(`$${inv.lossThreshold}`);
+                                    thresholdInfo = `<span class="threshold-badge threshold-price">${parts.join(' / ')}</span>`;
+                                }
+
+                                return `
+                                    <tr>
+                                        <td><strong>${inv.symbol}</strong></td>
+                                        <td>${inv.quantity}</td>
+                                        <td>$${inv.buyPrice.toFixed(2)}</td>
+                                        <td>$${currentPrice.toFixed(2)}</td>
+                                        <td>$${invested.toFixed(2)}</td>
+                                        <td>$${currentValue.toFixed(2)}</td>
+                                        <td class="${pl >= 0 ? 'profit' : 'loss'}">$${pl.toFixed(2)}</td>
+                                        <td class="${plPercentage >= 0 ? 'profit' : 'loss'}">${plPercentage.toFixed(2)}%</td>
+                                        <td>${thresholdInfo}</td>
+                                        <td><button class="delete-btn" onclick="portfolio.deleteInvestment(${inv.id})">Delete</button></td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                `;
+
+                document.getElementById('portfolioTableContainer').innerHTML = tableHTML;
+
+                const totalPL = totalCurrentValue - totalInvested;
+                const totalPLPercentage = totalInvested > 0 ? (totalPL / totalInvested) * 100 : 0;
+                this.updateStats(totalInvested, totalCurrentValue, totalPL, totalPLPercentage);
+            }
+
+            updateStats(invested, current, pl, plPercentage) {
+                document.getElementById('totalInvested').textContent = `$${invested.toFixed(2)}`;
+                document.getElementById('currentValue').textContent = `$${current.toFixed(2)}`;
+                document.getElementById('totalPL').textContent = `$${pl.toFixed(2)}`;
+                document.getElementById('totalPL').className = pl >= 0 ? 'profit' : 'loss';
+                document.getElementById('plPercentage').textContent = `${plPercentage.toFixed(2)}%`;
+                document.getElementById('plPercentage').className = plPercentage >= 0 ? 'profit' : 'loss';
+            }
+
+            deleteInvestment(id) {
+                if (confirm('Are you sure you want to delete this investment?')) {
+                    this.investments = this.investments.filter(inv => inv.id !== id);
+                    this.saveToStorage();
+                    this.renderPortfolio();
+                    this.showAlert('Investment deleted successfully', 'success');
+                }
+            }
+
+            showAlert(message, type) {
+                const alertContainer = document.getElementById('alertContainer');
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${type}`;
+                alertDiv.textContent = message;
+                alertContainer.appendChild(alertDiv);
+
+                setTimeout(() => {
+                    alertDiv.remove();
+                }, 5000);
+            }
+
+            saveToStorage() {
+                localStorage.setItem('cryptoPortfolio', JSON.stringify(this.investments));
+            }
+
+            loadFromStorage() {
+                const data = localStorage.getItem('cryptoPortfolio');
+                return data ? JSON.parse(data) : [];
+            }
+        }
+
+        // Initialize the portfolio
+        const portfolio = new CryptoPortfolio();
+    </script>
+</body>
+
+</html>
