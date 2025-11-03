@@ -414,6 +414,99 @@
             }
         }
 
+        /* Delete Confirmation Modal */
+        .delete-modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s;
+        }
+
+        .delete-modal.show {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .delete-modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 450px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s;
+            text-align: center;
+        }
+
+        .delete-modal-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: #fee2e2;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3em;
+        }
+
+        .delete-modal h3 {
+            color: #374151;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .delete-modal p {
+            color: #6b7280;
+            margin-bottom: 25px;
+            font-size: 1em;
+            line-height: 1.5;
+        }
+
+        .delete-modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .delete-modal-buttons button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 120px;
+        }
+
+        .btn-confirm-delete {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-confirm-delete:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-cancel-delete {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .btn-cancel-delete:hover {
+            background: #d1d5db;
+            transform: translateY(-2px);
+        }
+
         @media (max-width: 768px) {
             .form-grid {
                 grid-template-columns: 1fr;
@@ -434,6 +527,14 @@
 
             .action-buttons {
                 flex-direction: column;
+            }
+
+            .delete-modal-buttons {
+                flex-direction: column;
+            }
+
+            .delete-modal-buttons button {
+                width: 100%;
             }
         }
     </style>
@@ -618,6 +719,19 @@
         </div>
     </div>
 
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="delete-modal">
+        <div class="delete-modal-content">
+            <div class="delete-modal-icon">🗑️</div>
+            <h3>Delete Investment?</h3>
+            <p id="deleteModalMessage">Are you sure you want to delete this investment? This action cannot be undone.</p>
+            <div class="delete-modal-buttons">
+                <button class="btn-confirm-delete" onclick="portfolio.confirmDelete()">Yes, Delete</button>
+                <button class="btn-cancel-delete" onclick="portfolio.cancelDelete()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         class CryptoPortfolio {
             constructor() {
@@ -625,6 +739,7 @@
                 this.currentPrices = {};
                 this.priceUpdateInterval = null;
                 this.editingInvestmentId = null;
+                this.deleteInvestmentId = null;
                 this.init();
             }
 
@@ -681,6 +796,13 @@
                 document.getElementById('editModal').addEventListener('click', (e) => {
                     if (e.target.id === 'editModal') {
                         this.closeEditModal();
+                    }
+                });
+
+                // Close delete modal when clicking outside
+                document.getElementById('deleteModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'deleteModal') {
+                        this.cancelDelete();
                     }
                 });
             }
@@ -934,12 +1056,41 @@
             }
 
             deleteInvestment(id) {
-                if (confirm('Are you sure you want to delete this investment?')) {
-                    this.investments = this.investments.filter(inv => inv.id !== id);
-                    this.saveToStorage();
-                    this.renderPortfolio();
-                    this.showAlert('Investment deleted successfully', 'success');
-                }
+                const investment = this.investments.find(inv => inv.id === id);
+                if (!investment) return;
+
+                this.deleteInvestmentId = id;
+                
+                // Update modal message with investment details
+                const message = `Are you sure you want to delete ${investment.quantity} ${investment.symbol}? This action cannot be undone.`;
+                document.getElementById('deleteModalMessage').textContent = message;
+                
+                // Show modal
+                document.getElementById('deleteModal').classList.add('show');
+            }
+
+            confirmDelete() {
+                if (this.deleteInvestmentId === null) return;
+
+                // Find the investment to get its symbol for the alert
+                const investment = this.investments.find(inv => inv.id === this.deleteInvestmentId);
+                const symbol = investment ? investment.symbol : 'Investment';
+
+                // Remove the investment
+                this.investments = this.investments.filter(inv => inv.id !== this.deleteInvestmentId);
+                this.saveToStorage();
+                this.renderPortfolio();
+                
+                // Close modal
+                this.cancelDelete();
+                
+                // Show success message
+                this.showAlert(`${symbol} investment deleted successfully`, 'success');
+            }
+
+            cancelDelete() {
+                document.getElementById('deleteModal').classList.remove('show');
+                this.deleteInvestmentId = null;
             }
 
             showAlert(message, type) {
