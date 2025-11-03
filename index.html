@@ -594,6 +594,14 @@
                             <label for="buyPrice">Buy Price (USDT)</label>
                             <input type="number" id="buyPrice" step="0.01" placeholder="45000" required>
                         </div>
+                        <div class="form-group">
+                            <label for="buyDate">Purchase Date</label>
+                            <input type="date" id="buyDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="buyTime">Purchase Time</label>
+                            <input type="time" id="buyTime" required>
+                        </div>
                     </div>
 
                     <div class="threshold-section">
@@ -678,6 +686,14 @@
                         <label for="editBuyPrice">Buy Price (USDT)</label>
                         <input type="number" id="editBuyPrice" step="0.01" placeholder="45000" required>
                     </div>
+                    <div class="form-group">
+                        <label for="editBuyDate">Purchase Date</label>
+                        <input type="date" id="editBuyDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editBuyTime">Purchase Time</label>
+                        <input type="time" id="editBuyTime" required>
+                    </div>
                 </div>
 
                 <div class="threshold-section">
@@ -745,10 +761,20 @@
 
             init() {
                 this.setupEventListeners();
+                this.setDefaultDateTime();
                 this.updatePrices();
                 this.renderPortfolio();
                 // Update prices every 10 seconds
                 this.priceUpdateInterval = setInterval(() => this.updatePrices(), 10000);
+            }
+
+            setDefaultDateTime() {
+                const now = new Date();
+                const date = now.toISOString().split('T')[0];
+                const time = now.toTimeString().slice(0, 5);
+                
+                document.getElementById('buyDate').value = date;
+                document.getElementById('buyTime').value = time;
             }
 
             setupEventListeners() {
@@ -811,21 +837,26 @@
                 const symbol = document.getElementById('coinSymbol').value.trim().toUpperCase();
                 const quantity = parseFloat(document.getElementById('quantity').value);
                 const buyPrice = parseFloat(document.getElementById('buyPrice').value);
+                const buyDate = document.getElementById('buyDate').value;
+                const buyTime = document.getElementById('buyTime').value;
                 const thresholdType = document.querySelector('input[name="thresholdType"]:checked').value;
                 const profitThreshold = parseFloat(document.getElementById('profitThreshold').value) || null;
                 const lossThreshold = parseFloat(document.getElementById('lossThreshold').value) || null;
 
-                if (!symbol || isNaN(quantity) || isNaN(buyPrice) || quantity <= 0 || buyPrice <= 0) {
+                if (!symbol || isNaN(quantity) || isNaN(buyPrice) || quantity <= 0 || buyPrice <= 0 || !buyDate || !buyTime) {
                     this.showAlert('Please fill in all required fields with valid values', 'warning');
                     return;
                 }
+
+                // Combine date and time into ISO string
+                const buyDateTime = new Date(`${buyDate}T${buyTime}`).toISOString();
 
                 const investment = {
                     id: Date.now(),
                     symbol: symbol,
                     quantity: quantity,
                     buyPrice: buyPrice,
-                    buyDate: new Date().toISOString(),
+                    buyDate: buyDateTime,
                     thresholdType: thresholdType,
                     profitThreshold: profitThreshold,
                     lossThreshold: lossThreshold
@@ -837,6 +868,7 @@
                 this.renderPortfolio();
                 this.showAlert(`Successfully added ${quantity} ${symbol}`, 'success');
                 document.getElementById('addInvestmentForm').reset();
+                this.setDefaultDateTime(); // Reset to current date/time
             }
 
             openEditModal(id) {
@@ -845,11 +877,18 @@
 
                 this.editingInvestmentId = id;
 
+                // Parse the ISO date string
+                const buyDateTime = new Date(investment.buyDate);
+                const date = buyDateTime.toISOString().split('T')[0];
+                const time = buyDateTime.toTimeString().slice(0, 5);
+
                 // Populate form fields
                 document.getElementById('editInvestmentId').value = investment.id;
                 document.getElementById('editCoinSymbol').value = investment.symbol;
                 document.getElementById('editQuantity').value = investment.quantity;
                 document.getElementById('editBuyPrice').value = investment.buyPrice;
+                document.getElementById('editBuyDate').value = date;
+                document.getElementById('editBuyTime').value = time;
 
                 // Set threshold type
                 document.querySelector(`input[name="editThresholdType"][value="${investment.thresholdType}"]`).checked = true;
@@ -878,11 +917,13 @@
                 const symbol = document.getElementById('editCoinSymbol').value.trim().toUpperCase();
                 const quantity = parseFloat(document.getElementById('editQuantity').value);
                 const buyPrice = parseFloat(document.getElementById('editBuyPrice').value);
+                const buyDate = document.getElementById('editBuyDate').value;
+                const buyTime = document.getElementById('editBuyTime').value;
                 const thresholdType = document.querySelector('input[name="editThresholdType"]:checked').value;
                 const profitThreshold = parseFloat(document.getElementById('editProfitThreshold').value) || null;
                 const lossThreshold = parseFloat(document.getElementById('editLossThreshold').value) || null;
 
-                if (!symbol || isNaN(quantity) || isNaN(buyPrice) || quantity <= 0 || buyPrice <= 0) {
+                if (!symbol || isNaN(quantity) || isNaN(buyPrice) || quantity <= 0 || buyPrice <= 0 || !buyDate || !buyTime) {
                     this.showAlert('Please fill in all required fields with valid values', 'warning');
                     return;
                 }
@@ -890,12 +931,16 @@
                 const investmentIndex = this.investments.findIndex(inv => inv.id === id);
                 if (investmentIndex === -1) return;
 
+                // Combine date and time into ISO string
+                const buyDateTime = new Date(`${buyDate}T${buyTime}`).toISOString();
+
                 // Update the investment
                 this.investments[investmentIndex] = {
                     ...this.investments[investmentIndex],
                     symbol: symbol,
                     quantity: quantity,
                     buyPrice: buyPrice,
+                    buyDate: buyDateTime,
                     thresholdType: thresholdType,
                     profitThreshold: profitThreshold,
                     lossThreshold: lossThreshold
@@ -982,6 +1027,7 @@
                                 <th>Coin</th>
                                 <th>Quantity</th>
                                 <th>Buy Price</th>
+                                <th>Buy Date</th>
                                 <th>Current Price</th>
                                 <th>Invested</th>
                                 <th>Current Value</th>
@@ -1002,6 +1048,16 @@
                     totalInvested += invested;
                     totalCurrentValue += currentValue;
 
+                    // Format buy date
+                    const buyDate = new Date(inv.buyDate);
+                    const formattedDate = buyDate.toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
                     let thresholdInfo = 'None';
                     if (inv.thresholdType === 'percentage') {
                         const parts = [];
@@ -1020,6 +1076,7 @@
                                         <td><strong>${inv.symbol}</strong></td>
                                         <td>${inv.quantity}</td>
                                         <td>$${inv.buyPrice.toFixed(2)}</td>
+                                        <td>${formattedDate}</td>
                                         <td>$${currentPrice.toFixed(2)}</td>
                                         <td>$${invested.toFixed(2)}</td>
                                         <td>$${currentValue.toFixed(2)}</td>
