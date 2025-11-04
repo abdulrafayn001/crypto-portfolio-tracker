@@ -1346,9 +1346,9 @@
                                     <tr>
                                         <td class="coin-cell">${inv.symbol}</td>
                                         <td>${inv.quantity}</td>
-                                        <td>$${inv.buyPrice.toFixed(2)}</td>
+                                        <td>$${this.formatPrice(inv.buyPrice)}</td>
                                         <td class="date-cell">${formattedDate}</td>
-                                        <td>$${currentPrice.toFixed(2)}</td>
+                                        <td>$${this.formatPrice(currentPrice)}</td>
                                         <td>$${invested.toFixed(2)}</td>
                                         <td>$${currentValue.toFixed(2)}</td>
                                         <td class="${pl >= 0 ? 'profit' : 'loss'}">${pl >= 0 ? '+' : ''}$${pl.toFixed(2)}</td>
@@ -1423,11 +1423,11 @@
                                 </div>
                                 <div class="portfolio-card-item">
                                     <div class="portfolio-card-label">Buy Price</div>
-                                    <div class="portfolio-card-value">$${inv.buyPrice.toFixed(2)}</div>
+                                    <div class="portfolio-card-value">$${this.formatPrice(inv.buyPrice)}</div>
                                 </div>
                                 <div class="portfolio-card-item">
                                     <div class="portfolio-card-label">Current Price</div>
-                                    <div class="portfolio-card-value">$${currentPrice.toFixed(2)}</div>
+                                    <div class="portfolio-card-value">$${this.formatPrice(currentPrice)}</div>
                                 </div>
                                 <div class="portfolio-card-item">
                                     <div class="portfolio-card-label">Invested</div>
@@ -1715,6 +1715,23 @@
             loadFromStorage() {
                 const data = localStorage.getItem('cryptoPortfolio');
                 return data ? JSON.parse(data) : [];
+            }
+
+            formatPrice(price) {
+                // For very small prices (less than 0.01), show up to 8 decimals
+                if (price < 0.01 && price > 0) {
+                    return price.toFixed(8).replace(/\.?0+$/, '');
+                }
+                // For prices less than 1, show up to 6 decimals
+                if (price < 1) {
+                    return price.toFixed(6).replace(/\.?0+$/, '');
+                }
+                // For prices less than 100, show up to 4 decimals
+                if (price < 100) {
+                    return price.toFixed(4).replace(/\.?0+$/, '');
+                }
+                // For larger prices, show 2 decimals
+                return price.toFixed(2);
             }
         }
 
