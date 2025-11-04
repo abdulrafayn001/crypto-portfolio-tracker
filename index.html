@@ -1114,7 +1114,7 @@
                 const profitThreshold = parseFloat(document.getElementById('profitThreshold').value) || null;
                 const lossThreshold = parseFloat(document.getElementById('lossThreshold').value) || null;
 
-                if (!symbol || isNaN(quantity) || isNaN(buyPrice) || quantity <= 0 || buyPrice <= 0 || !buyDate || !buyTime) {
+                if (!symbol || isNaN(quantity) || isNaN(buyPrice) || quantity <= 0 || buyPrice < 0 || !buyDate || !buyTime) {
                     this.showAlert('Please fill in all required fields with valid values', 'warning');
                     return;
                 }
@@ -1194,7 +1194,7 @@
                 const profitThreshold = parseFloat(document.getElementById('editProfitThreshold').value) || null;
                 const lossThreshold = parseFloat(document.getElementById('editLossThreshold').value) || null;
 
-                if (!symbol || isNaN(quantity) || isNaN(buyPrice) || quantity <= 0 || buyPrice <= 0 || !buyDate || !buyTime) {
+                if (!symbol || isNaN(quantity) || isNaN(buyPrice) || quantity <= 0 || buyPrice < 0 || !buyDate || !buyTime) {
                     this.showAlert('Please fill in all required fields with valid values', 'warning');
                     return;
                 }
@@ -1644,7 +1644,7 @@
                                 continue;
                             }
 
-                            if (quantity <= 0 || buyPrice <= 0) {
+                            if (quantity <= 0 || buyPrice < 0) {
                                 console.warn(`Skipping invalid values in row ${i + 1}`);
                                 continue;
                             }
