@@ -159,6 +159,101 @@
             font-size: 1.8em;
         }
 
+        .portfolio-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .portfolio-title {
+            color: #667eea;
+            font-size: 1.8em;
+            margin: 0;
+        }
+
+        .portfolio-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .import-export-btn {
+            position: relative;
+            padding: 10px 20px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .import-export-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .import-export-btn .icon {
+            font-size: 1.2em;
+        }
+
+        /* Tooltip styles */
+        .tooltip {
+            position: relative;
+        }
+
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-8px);
+            padding: 8px 12px;
+            background: #374151;
+            color: white;
+            font-size: 0.85em;
+            font-weight: 500;
+            border-radius: 6px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s, transform 0.2s;
+            z-index: 1000;
+        }
+
+        .tooltip::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-2px);
+            border: 6px solid transparent;
+            border-top-color: #374151;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s, transform 0.2s;
+            z-index: 1000;
+        }
+
+        .tooltip:hover::after,
+        .tooltip:hover::before {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-4px);
+        }
+
+        #importInput {
+            display: none;
+        }
+
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -654,6 +749,19 @@
                 gap: 15px;
             }
 
+            .portfolio-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .portfolio-actions {
+                width: 100%;
+            }
+
+            .import-export-btn {
+                flex: 1;
+            }
+
             .delete-modal-buttons {
                 flex-direction: column;
             }
@@ -674,6 +782,16 @@
 
             .portfolio-card-coin {
                 font-size: 1.3em;
+            }
+
+            .portfolio-actions {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .import-export-btn {
+                width: 100%;
+                justify-content: center;
             }
         }
     </style>
@@ -777,7 +895,20 @@
             </div>
 
             <div class="portfolio-section">
-                <h2>Your Portfolio</h2>
+                <div class="portfolio-header">
+                    <h2 class="portfolio-title">Your Portfolio</h2>
+                    <div class="portfolio-actions">
+                        <button class="import-export-btn tooltip" data-tooltip="Import investments from CSV file" onclick="portfolio.triggerImport()">
+                            <span class="icon">📥</span>
+                            Import
+                        </button>
+                        <button class="import-export-btn tooltip" data-tooltip="Export investments to CSV file" onclick="portfolio.exportToCSV()">
+                            <span class="icon">📤</span>
+                            Export
+                        </button>
+                    </div>
+                </div>
+                <input type="file" id="importInput" accept=".csv" onchange="portfolio.importFromCSV(event)">
                 <div class="stats-grid" id="statsGrid">
                     <div class="stat-card">
                         <h3>Total Invested</h3>
@@ -1394,6 +1525,186 @@
                 setTimeout(() => {
                     alertDiv.remove();
                 }, 5000);
+            }
+
+            exportToCSV() {
+                if (this.investments.length === 0) {
+                    this.showAlert('No investments to export', 'warning');
+                    return;
+                }
+
+                // CSV Headers
+                const headers = ['Symbol', 'Quantity', 'Buy Price', 'Buy Date', 'Threshold Type', 'Profit Threshold', 'Loss Threshold'];
+                
+                // Convert investments to CSV rows
+                const rows = this.investments.map(inv => {
+                    return [
+                        inv.symbol,
+                        inv.quantity,
+                        inv.buyPrice,
+                        inv.buyDate,
+                        inv.thresholdType,
+                        inv.profitThreshold || '',
+                        inv.lossThreshold || ''
+                    ].join(',');
+                });
+
+                // Combine headers and rows
+                const csvContent = [headers.join(','), ...rows].join('\n');
+
+                // Create blob and download
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                
+                link.setAttribute('href', url);
+                link.setAttribute('download', `crypto_portfolio_${new Date().toISOString().split('T')[0]}.csv`);
+                link.style.visibility = 'hidden';
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                this.showAlert('Portfolio exported successfully!', 'success');
+            }
+
+            triggerImport() {
+                document.getElementById('importInput').click();
+            }
+
+            importFromCSV(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                // Check if file is CSV
+                if (!file.name.endsWith('.csv')) {
+                    this.showAlert('Please upload a CSV file', 'warning');
+                    event.target.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const content = e.target.result;
+                        const lines = content.split('\n').filter(line => line.trim());
+                        
+                        if (lines.length < 2) {
+                            this.showAlert('CSV file is empty or invalid', 'warning');
+                            return;
+                        }
+
+                        // Parse headers
+                        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+                        
+                        // Validate headers
+                        const requiredHeaders = ['symbol', 'quantity', 'buy price', 'buy date'];
+                        const hasRequiredHeaders = requiredHeaders.every(header => 
+                            headers.some(h => h.includes(header.toLowerCase()))
+                        );
+
+                        if (!hasRequiredHeaders) {
+                            this.showAlert('Invalid CSV format. Required columns: Symbol, Quantity, Buy Price, Buy Date', 'warning');
+                            return;
+                        }
+
+                        // Find header indices
+                        const symbolIndex = headers.findIndex(h => h.includes('symbol'));
+                        const quantityIndex = headers.findIndex(h => h.includes('quantity'));
+                        const buyPriceIndex = headers.findIndex(h => h.includes('buy price'));
+                        const buyDateIndex = headers.findIndex(h => h.includes('buy date'));
+                        const thresholdTypeIndex = headers.findIndex(h => h.includes('threshold type'));
+                        const profitThresholdIndex = headers.findIndex(h => h.includes('profit threshold'));
+                        const lossThresholdIndex = headers.findIndex(h => h.includes('loss threshold'));
+
+                        // Parse data rows
+                        const newInvestments = [];
+                        let importedCount = 0;
+                        let duplicateCount = 0;
+
+                        for (let i = 1; i < lines.length; i++) {
+                            const line = lines[i].trim();
+                            if (!line) continue;
+
+                            const values = line.split(',').map(v => v.trim());
+                            
+                            // Extract values
+                            const symbol = values[symbolIndex]?.toUpperCase();
+                            const quantity = parseFloat(values[quantityIndex]);
+                            const buyPrice = parseFloat(values[buyPriceIndex]);
+                            const buyDate = values[buyDateIndex];
+                            const thresholdType = values[thresholdTypeIndex] || 'none';
+                            const profitThreshold = values[profitThresholdIndex] ? parseFloat(values[profitThresholdIndex]) : null;
+                            const lossThreshold = values[lossThresholdIndex] ? parseFloat(values[lossThresholdIndex]) : null;
+
+                            // Validate data
+                            if (!symbol || isNaN(quantity) || isNaN(buyPrice) || !buyDate) {
+                                console.warn(`Skipping invalid row ${i + 1}`);
+                                continue;
+                            }
+
+                            if (quantity <= 0 || buyPrice <= 0) {
+                                console.warn(`Skipping invalid values in row ${i + 1}`);
+                                continue;
+                            }
+
+                            // Create investment object
+                            const investment = {
+                                id: Date.now() + i,
+                                symbol: symbol,
+                                quantity: quantity,
+                                buyPrice: buyPrice,
+                                buyDate: buyDate,
+                                thresholdType: thresholdType,
+                                profitThreshold: profitThreshold,
+                                lossThreshold: lossThreshold
+                            };
+
+                            // Check for duplicates (same symbol, quantity, price, and date)
+                            const isDuplicate = this.investments.some(existing => 
+                                existing.symbol === investment.symbol &&
+                                existing.quantity === investment.quantity &&
+                                existing.buyPrice === investment.buyPrice &&
+                                existing.buyDate === investment.buyDate
+                            ) || newInvestments.some(newInv =>
+                                newInv.symbol === investment.symbol &&
+                                newInv.quantity === investment.quantity &&
+                                newInv.buyPrice === investment.buyPrice &&
+                                newInv.buyDate === investment.buyDate
+                            );
+
+                            if (isDuplicate) {
+                                duplicateCount++;
+                                continue;
+                            }
+
+                            newInvestments.push(investment);
+                            importedCount++;
+                        }
+
+                        // Add new investments to portfolio
+                        this.investments.push(...newInvestments);
+                        this.saveToStorage();
+                        this.updatePrices();
+                        this.renderPortfolio();
+
+                        // Show summary
+                        let message = `Successfully imported ${importedCount} investment(s)`;
+                        if (duplicateCount > 0) {
+                            message += `. Skipped ${duplicateCount} duplicate(s)`;
+                        }
+                        this.showAlert(message, 'success');
+
+                    } catch (error) {
+                        console.error('Import error:', error);
+                        this.showAlert('Error importing CSV file. Please check the format.', 'warning');
+                    } finally {
+                        // Reset file input
+                        event.target.value = '';
+                    }
+                };
+
+                reader.readAsText(file);
             }
 
             saveToStorage() {
