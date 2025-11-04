@@ -529,39 +529,6 @@
             transform: translateY(-2px);
         }
 
-        @media (max-width: 768px) {
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .threshold-options {
-                flex-direction: column;
-            }
-
-            /* Hide table and show cards on mobile */
-            .portfolio-table {
-                display: none;
-            }
-
-            .portfolio-cards {
-                display: block;
-            }
-
-            .delete-modal-buttons {
-                flex-direction: column;
-            }
-
-            .delete-modal-buttons button {
-                width: 100%;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .stat-card p {
-                font-size: 1.5em;
-            }
-        }
-
         /* Portfolio Cards for Mobile */
         .portfolio-cards {
             display: none;
@@ -653,6 +620,68 @@
         .portfolio-card-pl-value {
             font-size: 1.2em;
             font-weight: 700;
+        }
+
+        /* Tablet - horizontal scroll for table */
+        @media (max-width: 1000px) {
+            .portfolio-table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .portfolio-table thead,
+            .portfolio-table tbody,
+            .portfolio-table tr,
+            .portfolio-table th,
+            .portfolio-table td {
+                display: table;
+                display: table-row;
+                display: table-cell;
+            }
+        }
+
+        /* Mobile - switch to cards */
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .threshold-options {
+                flex-direction: column;
+            }
+
+            /* Hide table and show cards on mobile */
+            .portfolio-table {
+                display: none !important;
+            }
+
+            .portfolio-cards {
+                display: block !important;
+            }
+
+            .delete-modal-buttons {
+                flex-direction: column;
+            }
+
+            .delete-modal-buttons button {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stat-card p {
+                font-size: 1.5em;
+            }
+
+            .portfolio-card {
+                padding: 15px;
+            }
+
+            .portfolio-card-coin {
+                font-size: 1.3em;
+            }
         }
     </style>
 </head>
