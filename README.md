@@ -17,6 +17,11 @@ A modern, feature-rich cryptocurrency portfolio tracking application built with 
 
 ### 💹 Advanced Tracking
 - **Profit/Loss Tracking**: Automatic calculation of gains/losses in both USD and percentage
+- **P&L Calculator**: Built-in calculator to simulate investment scenarios:
+  - Calculate potential outcomes based on percentage gains/losses
+  - Calculate potential outcomes based on target prices
+  - See projected final value, P&L amount, and percentage returns
+  - Smart field management - only one calculation method active at a time
 - **Threshold Alerts**: Set custom profit or loss targets with two types:
   - **Percentage-based**: Get notified when your investment reaches a specific percentage gain/loss
   - **Price-based**: Get alerts when a coin reaches a target price
@@ -96,6 +101,28 @@ That's it! No installation, no dependencies, no build process needed.
    - Set profit target (e.g., +10% or $50,000)
    - Set loss limit (e.g., -5% or $40,000)
 6. **Click "Add Investment"**: Your investment is saved and portfolio updates instantly
+
+### Using the P&L Calculator
+
+1. **Click the 🧮 Calculator button** in the portfolio header
+2. **Enter Investment Details**:
+   - Number of Coins: How many coins you own or plan to buy
+   - Buy Price (USDT): The price you paid or plan to pay per coin
+3. **Choose ONE Calculation Method**:
+   - **P&L Percentage**: Enter your target gain/loss percentage (e.g., 20 for +20% or -10 for -10%)
+   - **OR Target Price**: Enter the price you expect the coin to reach (e.g., 50000)
+   - Note: When you enter one, the other field automatically disables
+4. **Click "Calculate"**: See your projected results including:
+   - Total Invested: Your initial investment amount
+   - Target Price: The calculated or entered target price per coin
+   - P&L Percentage: The profit/loss percentage
+   - P&L Amount: Dollar amount of profit or loss
+   - Final Value: Your total portfolio value at target price
+
+**Example Use Cases:**
+- "If I buy 0.5 BTC at $45,000, what will it be worth at 20% gain?"
+- "If ETH reaches $4,000, how much profit will I make on 2 ETH bought at $3,000?"
+- "What target price do I need for a 50% return on my investment?"
 
 ### Editing an Investment
 
@@ -188,11 +215,13 @@ The app uses the [Binance Public API](https://binance-docs.github.io/apidocs/spo
 ## 🎯 Use Cases
 
 - **Personal Investment Tracking**: Monitor your crypto portfolio performance
+- **Investment Planning**: Use the calculator to simulate different scenarios before buying
 - **Tax Reporting**: Export data for tax purposes
 - **Investment Analysis**: Track profit/loss over time
-- **Risk Management**: Set stop-loss alerts
+- **Risk Management**: Set stop-loss alerts and calculate potential losses
 - **Portfolio Diversification**: Visualize your holdings
 - **Historical Tracking**: Maintain records of all purchases
+- **Goal Setting**: Calculate target prices needed for desired returns
 
 ## 🔒 Privacy & Security
 
@@ -219,6 +248,8 @@ Contributions are welcome! Here's how you can help:
 - Create portfolio analytics dashboard
 - Add multi-currency support
 - Implement data backup to cloud services
+- Add historical price comparison in calculator
+- Create mobile app version
 
 ## 📝 License
 
@@ -246,6 +277,7 @@ This project is open source and available under the [MIT License](LICENSE).
 - 🔄 Auto-refresh interval customization
 - 💾 Cloud backup option
 - 📱 Progressive Web App (PWA) support
+- 🧮 Advanced calculator with historical price comparison
 
 ---
 
