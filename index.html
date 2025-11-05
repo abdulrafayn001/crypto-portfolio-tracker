@@ -96,6 +96,12 @@
             border-color: #667eea;
         }
 
+        .form-group input:disabled {
+            background: #f3f4f6;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
         .threshold-section {
             background: #fff;
             padding: 15px;
@@ -511,6 +517,64 @@
             box-shadow: 0 5px 15px rgba(107, 114, 128, 0.4);
         }
 
+        /* Calculator Result Styles */
+        .calculator-result {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .calculator-result.show {
+            display: block;
+            animation: slideIn 0.3s;
+        }
+
+        .calculator-result h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            text-align: center;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .result-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-item.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .result-label {
+            font-size: 0.85em;
+            color: #6b7280;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .result-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #374151;
+        }
+
+        .result-value.large {
+            font-size: 2em;
+        }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -769,6 +833,10 @@
             .delete-modal-buttons button {
                 width: 100%;
             }
+
+            .result-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         @media (max-width: 480px) {
@@ -899,6 +967,10 @@
                 <div class="portfolio-header">
                     <h2 class="portfolio-title">Your Portfolio</h2>
                     <div class="portfolio-actions">
+                        <button class="import-export-btn tooltip" data-tooltip="Calculate profit/loss scenarios" onclick="portfolio.openCalculator()">
+                            <span class="icon">🧮</span>
+                            Calculator
+                        </button>
                         <button class="import-export-btn tooltip" data-tooltip="Import investments from CSV file" onclick="portfolio.triggerImport()">
                             <span class="icon">📥</span>
                             Import
@@ -930,6 +1002,70 @@
                 </div>
 
                 <div id="portfolioTableContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calculator Modal -->
+    <div id="calculatorModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>P&L Calculator</h2>
+                <button class="close-btn" onclick="portfolio.closeCalculator()">&times;</button>
+            </div>
+            <form id="calculatorForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="calcQuantity">Number of Coins</label>
+                        <input type="number" id="calcQuantity" step="0.00000001" placeholder="0.5" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="calcBuyPrice">Buy Price (USDT)</label>
+                        <input type="number" id="calcBuyPrice" step="any" placeholder="45000" required>
+                    </div>
+                </div>
+
+                <div class="threshold-section">
+                    <h3>Calculate By (Choose One)</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="calcPLPercentage">P&L Percentage (%)</label>
+                            <input type="number" id="calcPLPercentage" step="any" placeholder="e.g. 20 or -10">
+                        </div>
+                        <div class="form-group">
+                            <label for="calcTargetPrice">Target Price (USDT)</label>
+                            <input type="number" id="calcTargetPrice" step="any" placeholder="e.g. 50000">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn">Calculate</button>
+            </form>
+
+            <div id="calculatorResult" class="calculator-result">
+                <h3>📊 Calculation Results</h3>
+                <div class="result-grid">
+                    <div class="result-item">
+                        <div class="result-label">Total Invested</div>
+                        <div class="result-value" id="resultInvested">$0.00</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">Target Price</div>
+                        <div class="result-value" id="resultTargetPrice">$0.00</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">P&L Percentage</div>
+                        <div class="result-value" id="resultPLPercentage">0%</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">P&L Amount</div>
+                        <div class="result-value" id="resultPLAmount">$0.00</div>
+                    </div>
+                    <div class="result-item full-width">
+                        <div class="result-label">Final Value</div>
+                        <div class="result-value large" id="resultFinalValue">$0.00</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1059,6 +1195,11 @@
                     this.updateInvestment();
                 });
 
+                document.getElementById('calculatorForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.calculatePL();
+                });
+
                 // Enable/disable threshold inputs based on selected type (Add form)
                 document.querySelectorAll('input[name="thresholdType"]').forEach(radio => {
                     radio.addEventListener('change', () => {
@@ -1089,10 +1230,38 @@
                     });
                 });
 
+                // Calculator input mutual exclusivity
+                const calcPLPercentage = document.getElementById('calcPLPercentage');
+                const calcTargetPrice = document.getElementById('calcTargetPrice');
+
+                calcPLPercentage.addEventListener('input', () => {
+                    if (calcPLPercentage.value !== '') {
+                        calcTargetPrice.disabled = true;
+                        calcTargetPrice.value = '';
+                    } else {
+                        calcTargetPrice.disabled = false;
+                    }
+                });
+
+                calcTargetPrice.addEventListener('input', () => {
+                    if (calcTargetPrice.value !== '') {
+                        calcPLPercentage.disabled = true;
+                        calcPLPercentage.value = '';
+                    } else {
+                        calcPLPercentage.disabled = false;
+                    }
+                });
+
                 // Close modal when clicking outside
                 document.getElementById('editModal').addEventListener('click', (e) => {
                     if (e.target.id === 'editModal') {
                         this.closeEditModal();
+                    }
+                });
+
+                document.getElementById('calculatorModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'calculatorModal') {
+                        this.closeCalculator();
                     }
                 });
 
@@ -1102,6 +1271,78 @@
                         this.cancelDelete();
                     }
                 });
+            }
+
+            openCalculator() {
+                document.getElementById('calculatorModal').classList.add('show');
+                document.getElementById('calculatorResult').classList.remove('show');
+                document.getElementById('calculatorForm').reset();
+                
+                // Re-enable both inputs
+                document.getElementById('calcPLPercentage').disabled = false;
+                document.getElementById('calcTargetPrice').disabled = false;
+            }
+
+            closeCalculator() {
+                document.getElementById('calculatorModal').classList.remove('show');
+                document.getElementById('calculatorForm').reset();
+                document.getElementById('calculatorResult').classList.remove('show');
+                
+                // Re-enable both inputs
+                document.getElementById('calcPLPercentage').disabled = false;
+                document.getElementById('calcTargetPrice').disabled = false;
+            }
+
+            calculatePL() {
+                const quantity = parseFloat(document.getElementById('calcQuantity').value);
+                const buyPrice = parseFloat(document.getElementById('calcBuyPrice').value);
+                const plPercentage = parseFloat(document.getElementById('calcPLPercentage').value);
+                const targetPrice = parseFloat(document.getElementById('calcTargetPrice').value);
+
+                if (isNaN(quantity) || isNaN(buyPrice) || quantity <= 0 || buyPrice <= 0) {
+                    this.showAlert('Please enter valid quantity and buy price', 'warning');
+                    return;
+                }
+
+                if (isNaN(plPercentage) && isNaN(targetPrice)) {
+                    this.showAlert('Please enter either P&L Percentage or Target Price', 'warning');
+                    return;
+                }
+
+                const invested = quantity * buyPrice;
+                let finalTargetPrice, finalPLPercentage, plAmount, finalValue;
+
+                if (!isNaN(plPercentage)) {
+                    // Calculate based on percentage
+                    finalPLPercentage = plPercentage;
+                    finalTargetPrice = buyPrice * (1 + plPercentage / 100);
+                    finalValue = quantity * finalTargetPrice;
+                    plAmount = finalValue - invested;
+                } else {
+                    // Calculate based on target price
+                    finalTargetPrice = targetPrice;
+                    finalValue = quantity * targetPrice;
+                    plAmount = finalValue - invested;
+                    finalPLPercentage = (plAmount / invested) * 100;
+                }
+
+                // Display results
+                const resultInvested = document.getElementById('resultInvested');
+                const resultTargetPrice = document.getElementById('resultTargetPrice');
+                const resultPLPercentage = document.getElementById('resultPLPercentage');
+                const resultPLAmount = document.getElementById('resultPLAmount');
+                const resultFinalValue = document.getElementById('resultFinalValue');
+
+                resultInvested.textContent = `$${invested.toFixed(2)}`;
+                resultTargetPrice.textContent = `$${this.formatPrice(finalTargetPrice)}`;
+                resultPLPercentage.textContent = `${finalPLPercentage >= 0 ? '+' : ''}${finalPLPercentage.toFixed(2)}%`;
+                resultPLPercentage.className = `result-value ${finalPLPercentage >= 0 ? 'profit' : 'loss'}`;
+                resultPLAmount.textContent = `${plAmount >= 0 ? '+' : ''}$${plAmount.toFixed(2)}`;
+                resultPLAmount.className = `result-value ${plAmount >= 0 ? 'profit' : 'loss'}`;
+                resultFinalValue.textContent = `$${finalValue.toFixed(2)}`;
+                resultFinalValue.className = `result-value large ${plAmount >= 0 ? 'profit' : 'loss'}`;
+
+                document.getElementById('calculatorResult').classList.add('show');
             }
 
             addInvestment() {
